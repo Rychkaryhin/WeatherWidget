@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Widget 850x500</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body, html {
+      width: 850px;
+      height: 500px;
+      overflow: hidden;
+      font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background: transparent;
+    }
+
+    .widget-viewport {
+      position: relative;
+      width: 850px;
+      height: 500px;
+      overflow: hidden;
+    }
+    
+    .bg-city-name {
+      position: absolute;
+      top: -90px;
+      left: -20px;
+      font-size: 200px;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.15);
+      text-transform: uppercase;
+      letter-spacing: -3px;
+      z-index: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .bg-emoji-shadow {
+      position: absolute;
+      bottom: -40px;
+      right: -40px;
+      font-size: 350px;
+      opacity: 0.4;
+      filter: blur(10px);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .main-content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 35px 40px; 
+    }
+
+    .real-city-name {
+      font-size: 65px;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      background: rgba(255,255,255,0.15);
+      padding: 5px 35px;
+      border-radius: 50px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .weather-focus {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      width: 100%;
+    }
+
+    .emoji-main {
+      font-size: 160px;
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4));
+      animation: float 4s ease-in-out infinite;
+      line-height: 1;
+      margin-top: -10px;
+    }
+
+    .temp-main {
+      font-size: 160px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      letter-spacing: -5px;
+    }
+
+    .info-bars {
+      width: 100%;
+    }
+
+    .bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(12px);
+      padding: 20px 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      width: 100%;
+    }
+
+    .bar-desc {
+      font-size: 34px;
+      font-weight: 700;
+      color: #fff;
+      border-left: 6px solid #FFCC00;
+      padding-left: 20px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      white-space: nowrap;
+    }
+
+    .bar-wind {
+      font-size: 28px;
+      font-weight: 500;
+      color: #ddd;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .wind-value {
+      color: #fff;
+      font-weight: 800;
+      font-size: 34px;
+      margin-left: 10px;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+    }
+
+    .fade-in {
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95) translateY(15px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="widget-viewport">
+  <div class="bg-city-name" id="bg-city">ГОРОД</div>
+  <div class="bg-emoji-shadow" id="bg-emoji">☀️</div>
+
+  <div class="main-content fade-in" id="main-content">
+
+    <div class="real-city-name" id="city">МОСКВА</div>
+
+    <div class="weather-focus">
+      <div class="emoji-main" id="emoji">☀️</div>
+      <div class="temp-main" id="temp">18°</div>
+    </div>
+
+    <div class="info-bars">
+      <div class="bar">
+        <div class="bar-desc" id="desc">Ясно, солнечно</div>
+        <div class="bar-wind">
+          Ветер:<span class="wind-value" id="wind">5 км/ч</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const UPDATE_INTERVAL = 10000;
+
+  const CITIES = [
+    { name: 'Москва', lat: 55.75, lon: 37.62 },
+    { name: 'Санкт-Петербург', lat: 59.94, lon: 30.31 },
+    { name: 'Новосибирск', lat: 55.00, lon: 82.92 },
+    { name: 'Екатеринбург', lat: 56.84, lon: 60.61 },
+    { name: 'Казань', lat: 55.79, lon: 49.12 },
+    { name: 'Красноярск', lat: 56.02, lon: 92.87 },
+    { name: 'Нижний Новгород', lat: 56.33, lon: 44.00 },
+    { name: 'Челябинск', lat: 55.16, lon: 61.40 },
+    { name: 'Уфа', lat: 54.74, lon: 55.97 },
+    { name: 'Краснодар', lat: 45.03, lon: 38.98 },
+    { name: 'Самара', lat: 53.20, lon: 50.15 },
+    { name: 'Ростов-на-Дону', lat: 47.23, lon: 39.72 },
+    { name: 'Омск', lat: 54.98, lon: 73.37 },
+    { name: 'Воронеж', lat: 51.66, lon: 39.20 },
+    { name: 'Пермь', lat: 58.01, lon: 56.23 },
+    { name: 'Волгоград', lat: 48.71, lon: 44.52 },
+    { name: 'Саратов', lat: 51.53, lon: 46.03 },
+    { name: 'Тюмень', lat: 57.15, lon: 65.53 },
+    { name: 'Тольятти', lat: 53.51, lon: 49.42 },
+    { name: 'Махачкала', lat: 42.98, lon: 47.50 },
+    { name: 'Барнаул', lat: 53.35, lon: 83.78 },
+    { name: 'Ижевск', lat: 56.85, lon: 53.20 },
+    { name: 'Хабаровск', lat: 48.48, lon: 135.08 },
+    { name: 'Ульяновск', lat: 54.31, lon: 48.40 },
+    { name: 'Иркутск', lat: 52.29, lon: 104.28 },
+    { name: 'Владивосток', lat: 43.12, lon: 131.90 },
+    { name: 'Ярославль', lat: 57.63, lon: 39.87 },
+    { name: 'Ставрополь', lat: 45.04, lon: 41.97 },
+    { name: 'Севастополь', lat: 44.61, lon: 33.52 },
+    { name: 'Набережные Челны', lat: 55.74, lon: 52.33 },
+    { name: 'Томск', lat: 56.49, lon: 84.95 },
+    { name: 'Балашиха', lat: 55.80, lon: 37.94 },
+    { name: 'Кемерово', lat: 55.33, lon: 86.08 },
+    { name: 'Оренбург', lat: 51.77, lon: 55.10 },
+    { name: 'Новокузнецк', lat: 53.76, lon: 87.14 },
+    { name: 'Рязань', lat: 54.63, lon: 39.74 },
+    { name: 'Чебоксары', lat: 56.13, lon: 47.25 },
+    { name: 'Калининград', lat: 54.71, lon: 20.51 },
+    { name: 'Пенза', lat: 53.20, lon: 45.00 },
+    { name: 'Липецк', lat: 52.60, lon: 39.57 },
+    { name: 'Киров', lat: 58.60, lon: 49.66 },
+    { name: 'Астрахань', lat: 46.35, lon: 48.04 },
+    { name: 'Тула', lat: 54.19, lon: 37.62 },
+    { name: 'Сочи', lat: 43.60, lon: 39.73 },
+    { name: 'Улан-Удэ', lat: 51.83, lon: 107.58 },
+    { name: 'Курск', lat: 51.73, lon: 36.19 },
+    { name: 'Сургут', lat: 61.25, lon: 73.39 },
+    { name: 'Тверь', lat: 56.86, lon: 35.91 },
+    { name: 'Магнитогорск', lat: 53.41, lon: 59.00 },
+    { name: 'Грозный', lat: 43.32, lon: 45.69 },
+    { name: 'Якутск', lat: 62.03, lon: 129.73 },
+    { name: 'Брянск', lat: 53.24, lon: 34.37 },
+    { name: 'Иваново', lat: 56.99, lon: 40.97 },
+    { name: 'Владимир', lat: 56.13, lon: 40.40 },
+    { name: 'Чита', lat: 52.03, lon: 113.50 },
+    { name: 'Симферополь', lat: 44.95, lon: 34.10 },
+    { name: 'Нижний Тагил', lat: 57.91, lon: 59.98 },
+    { name: 'Калуга', lat: 54.51, lon: 36.26 },
+    { name: 'Белгород', lat: 50.60, lon: 36.58 },
+    { name: 'Вологда', lat: 59.22, lon: 39.89 },
+    { name: 'Смоленск', lat: 54.78, lon: 32.05 },
+    { name: 'Саранск', lat: 54.18, lon: 45.18 },
+    { name: 'Курган', lat: 55.44, lon: 65.34 },
+    { name: 'Череповец', lat: 59.13, lon: 37.90 },
+    { name: 'Архангельск', lat: 64.54, lon: 40.53 },
+    { name: 'Владикавказ', lat: 43.03, lon: 44.66 },
+    { name: 'Нижневартовск', lat: 60.94, lon: 76.55 },
+    { name: 'Орёл', lat: 52.97, lon: 36.06 },
+    { name: 'Йошкар-Ола', lat: 56.63, lon: 47.89 },
+    { name: 'Стерлитамак', lat: 53.63, lon: 55.93 },
+    { name: 'Мытищи', lat: 55.91, lon: 37.73 },
+    { name: 'Кострома', lat: 57.77, lon: 40.93 },
+    { name: 'Мурманск', lat: 68.96, lon: 33.08 },
+    { name: 'Новороссийск', lat: 44.72, lon: 37.76 },
+    { name: 'Минск', lat: 53.90, lon: 27.57 },
+    { name: 'Астана', lat: 51.13, lon: 71.43 },
+    { name: 'Алматы', lat: 43.24, lon: 76.91 },
+    { name: 'Шымкент', lat: 42.34, lon: 69.59 },
+    { name: 'Караганда', lat: 49.80, lon: 73.10 },
+    { name: 'Ташкент', lat: 41.31, lon: 69.24 },
+    { name: 'Самарканд', lat: 39.63, lon: 66.96 },
+    { name: 'Бухара', lat: 39.77, lon: 64.42 },
+    { name: 'Баку', lat: 40.38, lon: 49.86 },
+    { name: 'Гянджа', lat: 40.68, lon: 46.36 },
+    { name: 'Ереван', lat: 40.18, lon: 44.51 },
+    { name: 'Гюмри', lat: 40.79, lon: 43.85 },
+    { name: 'Бишкек', lat: 42.87, lon: 74.59 },
+    { name: 'Ош', lat: 40.51, lon: 72.82 },
+    { name: 'Душанбе', lat: 38.56, lon: 68.78 },
+    { name: 'Худжанд', lat: 40.28, lon: 69.62 },
+    { name: 'Ашхабад', lat: 37.95, lon: 58.38 },
+    { name: 'Кишинёв', lat: 47.01, lon: 28.86 },
+    { name: 'Брест', lat: 52.09, lon: 23.69 },
+    { name: 'Гродно', lat: 53.67, lon: 23.83 },
+    { name: 'Могилёв', lat: 53.90, lon: 30.33 },
+    { name: 'Витебск', lat: 55.19, lon: 30.20 },
+    { name: 'Актобе', lat: 50.28, lon: 57.17 },
+    { name: 'Тараз', lat: 42.90, lon: 71.37 },
+    { name: 'Павлодар', lat: 52.30, lon: 76.95 },
+    { name: 'Усть-Каменогорск', lat: 49.95, lon: 82.61 },
+    { name: 'Атырау', lat: 47.10, lon: 51.91 },
+    { name: 'Бельцы', lat: 47.76, lon: 27.92 },
+    { name: 'Мары', lat: 37.60, lon: 61.83 }
+  ];
+
+  function getWeatherMeta(code) {
+    const map = {
+      0: { e: '☀️', t: 'Ясно, солнечно' },
+      1: { e: '🌤️', t: 'Преимущественно ясно' },
+      2: { e: '⛅', t: 'Переменная облачность' },
+      3: { e: '☁️', t: 'Пасмурно, облачно' },
+      45: { e: '🌫️', t: 'Густой туман' },
+      51: { e: '🌧️', t: 'Легкий моросящий дождь' },
+      61: { e: '🌧️', t: 'Идет дождь' },
+      71: { e: '❄️', t: 'Ожидается снег' },
+      80: { e: '🌦️', t: 'Кратковременный ливень' },
+      95: { e: '⛈️', t: 'Возможна гроза' }
+    };
+    return map[code] || { e: '🌤️', t: 'Облачно' };
+  }
+
+  async function updateWeather() {
+    const city = CITIES[Math.floor(Math.random() * CITIES.length)];
+    const content = document.getElementById('main-content');
+
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true`);
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      const w = data.current_weather;
+      const meta = getWeatherMeta(w.weathercode);
+
+      content.classList.remove('fade-in');
+      void content.offsetWidth;
+      content.classList.add('fade-in');
+
+      document.getElementById('city').innerText = city.name;
+      document.getElementById('bg-city').innerText = city.name;
+      document.getElementById('temp').innerText = Math.round(w.temperature) + '°';
+      document.getElementById('wind').innerText = `${Math.round(w.windspeed)} км/ч`;
+      document.getElementById('emoji').innerText = meta.e;
+      document.getElementById('bg-emoji').innerText = meta.e;
+      document.getElementById('desc').innerText = meta.t;
+
+    } catch (e) {
+      console.error("Ошибка обновления погоды:", e);
+    }
+  }
+
+  setInterval(updateWeather, UPDATE_INTERVAL);
+  updateWeather();
+</script>
+</body>
+</html>
